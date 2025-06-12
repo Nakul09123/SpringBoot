@@ -1,15 +1,19 @@
 package com.example.rating.controller;
 
+import com.example.rating.config.JwtUtil;
 import com.example.rating.dto.AuthRequest;
 import com.example.rating.entity.Rating;
 import com.example.rating.entity.User;
+import com.example.rating.repositories.UserRepository;
 import com.example.rating.service.AuthService;
 import com.example.rating.service.RatingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/admin")
@@ -21,15 +25,52 @@ public class AdminController {
     @Autowired
     private RatingService ratingService;
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        return authService.register(user, "ADMIN");
-    }
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+//    @PostMapping("/register")
+//    public ResponseEntity<String> register(@RequestBody User user) {
+//        return authService.register(user, "ADMIN");
+//    }
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody AuthRequest request) {
         return authService.login(request);
     }
+
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<String> changeUserRole(
+            @PathVariable Long userId,
+            @RequestParam String role,
+            @RequestHeader("Authorization") String authHeader
+    ) {
+        if (!role.equals("ADMIN") && !role.equals("USER")) {
+            return ResponseEntity.badRequest().body("Invalid role. Use ADMIN or USER.");
+        }
+
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtil.extractEmail(token);
+
+        Optional<User> loggedInUser = userRepository.findByEmail(email);
+        if (loggedInUser.isEmpty() || !"ADMIN".equals(loggedInUser.get().getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Only admins can change roles.");
+        }
+
+        Optional<User> targetUser = userRepository.findById(userId);
+        if (targetUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+        }
+
+        User user = targetUser.get();
+        user.setRole(role);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("User role updated to " + role);
+    }
+
 
     @GetMapping("/ratings")
     public ResponseEntity<List<Rating>> getAllRatings() {

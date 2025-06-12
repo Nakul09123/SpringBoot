@@ -79,3 +79,6 @@ alter table if exists rating add constraint FKpn05vbx6usw0c65tcyuce4dw5 foreign 
 2025-06-11 16:25:43.808200+05:30 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "select u1_0.id,u1_0.email,u1_0.name,u1_0.password,u1_0.role from [*]user u1_0 where u1_0.email=?"; expected "identifier"; SQL statement:
 select u1_0.id,u1_0.email,u1_0.name,u1_0.password,u1_0.role from user u1_0 where u1_0.email=? [42001-232]
+2025-06-12 15:33:38.621196+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT * FROM RATING USERS [*]USERS"; SQL statement:
+SELECT * FROM RATING USERS USERS [42000-232]
